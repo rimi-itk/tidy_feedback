@@ -179,13 +179,18 @@ tasks:
             - task app:compose -- exec symfony bin/console cache:clear
 
             - task app:compose -- exec symfony bin/console tidy-feedback:doctrine:schema-update
-            - open "http://$(task app:compose -- port symfony 80)/tidy-feedback/test?tidy-feedback-show=form"
+            - task app:open
         silent: true
 
     app:stop:
         desc: Stop Symfony app
         cmds:
             - task app:compose -- down --remove-orphans
+
+    app:open:
+        desc: Open Symfony app
+        cmds:
+            - open "http://$(task app:compose -- port symfony 80)/tidy-feedback/test"
 
     app:compose:
         cmds:

@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.0] - 2025-07-10
 
+- [PR-12](https://github.com/itk-dev/tidy-feedback/pull/12)
+  Cleaned up and improved
 - [PR-11](https://github.com/itk-dev/tidy-feedback/pull/11)
   10: Changed TIDY_FEEDBACK_DISABLE_PATTERN default value
 - [PR-7](https://github.com/itk-dev/tidy-feedback/pull/7)

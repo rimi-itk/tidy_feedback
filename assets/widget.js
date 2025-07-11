@@ -28,8 +28,6 @@ const config = (() => {
     return {};
 })();
 
-const data = {};
-
 const showMessage = (message, type = "default") => {
     const el = root.querySelector(".tidy-feedback-message");
     if (el) {
@@ -81,12 +79,6 @@ const makeFormDraggable = () => {
 
         dragCleanup = makeDraggable(tidyFeedbackDiv, dragHandle, {
             constrainToViewport: true,
-            onDragStart: (e, element) => {
-                console.log("Started dragging feedback form");
-            },
-            onDragEnd: (e, element) => {
-                console.log("Finished dragging feedback form");
-            },
         });
     }
 };
@@ -147,6 +139,8 @@ addEventListener("load", () => {
         form.addEventListener("submit", async (event) => {
             event.preventDefault();
 
+            const data = {};
+
             showMessage("Taking screenshot …");
 
             try {
@@ -200,7 +194,6 @@ addEventListener("load", () => {
                 body: JSON.stringify(data),
             })
                 .then((response) => {
-                    console.log({ response });
                     if (201 === response.status) {
                         if (region) {
                             region.hidden = true;

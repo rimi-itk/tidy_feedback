@@ -169,3 +169,16 @@ Run `task app:stop` to stop the app.
 > ``` plain
 > /tidy-feedback/test?tidy-feedback[subject]=test&tidy-feedback[email]=test@example.com&tidy-feedback[description]=My%20feedback
 > ```
+
+For easy testing, you can use [Bookmarklet Creator](https://mrcoles.com/bookmarklet/) to convert the code
+
+``` javascript
+const url = new URL(document.location);
+url.searchParams.set('tidy-feedback-show', 'form');
+url.searchParams.set('tidy-feedback[subject]', 'My feedback '+new Date().toISOString());
+url.searchParams.set('tidy-feedback[email]', 'test@example.com');
+url.searchParams.set('tidy-feedback[description]', 'This is cool!');
+document.location = url
+```
+
+into a bookmarklet.
