@@ -6,6 +6,7 @@ namespace ItkDev\TidyFeedback;
 
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Tools\DsnParser;
+use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
@@ -28,6 +29,14 @@ use Twig\TwigFunction;
 
 final class TidyFeedbackHelper implements EventSubscriberInterface
 {
+    private const string CONFIG_DATABASE_URL = 'database_url';
+    private const string CONFIG_DEBUG = 'debug';
+    private const string CONFIG_DEV_MODE = 'dev_mode';
+    private const string CONFIG_DEFAULT_LOCALE = 'default_locale';
+    private const string CONFIG_DISABLE = 'disable';
+    private const string CONFIG_DISABLE_PATTERN = 'disable_pattern';
+    private const string CONFIG_USERS = 'users';
+
     private const string ASSET_PATH = __DIR__.'/../build';
 
     public function __construct(
@@ -100,7 +109,7 @@ final class TidyFeedbackHelper implements EventSubscriberInterface
         $translations = $this->getTranslations();
 
         // @todo Get the locale from some context …
-        $locale = self::getConfig('default_locale');
+        $locale = self::getConfig(self::CONFIG_DEFAULT_LOCALE);
         $fallbackLocale = 'en';
 
         return $translations[$locale][$text] ?? $translations[$fallbackLocale][$text] ?? $text;
@@ -114,13 +123,19 @@ final class TidyFeedbackHelper implements EventSubscriberInterface
     public static function getEntityManager(): EntityManagerInterface
     {
         if (empty(self::$entityManager)) {
-            $config = ORMSetup::createAttributeMetadataConfig(
+            $createAttributeMetadataConfigurationFunction = method_exists(ORMSetup::class, 'createAttributeMetadataConfig')
+                ? 'createAttributeMetadataConfig'
+                // ORMSetup::createAttributeMetadataConfiguration has been deprecated.
+                : 'createAttributeMetadataConfiguration';
+            /** @var Configuration $config */
+            $config = ORMSetup::{$createAttributeMetadataConfigurationFunction}(
                 paths: [__DIR__.'/Model'],
-                isDevMode: (bool) ($_ENV['TIDY_FEEDBACK_DEV_MODE'] ?? false),
+                isDevMode: self::getConfig(self::CONFIG_DEV_MODE),
             );
-            $config->enableNativeLazyObjects(true);
-
-            $dsn = self::getConfig('database_url');
+            if (method_exists($config, 'enableNativeLazyObjects')) {
+                $config->enableNativeLazyObjects(true);
+            }
+            $dsn = self::getConfig(self::CONFIG_DATABASE_URL);
             $connectionParams = (new DsnParser())->parse($dsn);
             $connection = DriverManager::getConnection($connectionParams, $config);
 
@@ -148,7 +163,7 @@ final class TidyFeedbackHelper implements EventSubscriberInterface
             autoEtag: true, autoLastModified: true
         );
 
-        if (self::getConfig('debug')) {
+        if (self::getConfig(self::CONFIG_DEBUG)) {
             // setExpires(null) does not seem to work as advertised, so we use a date in the far past.
             $response->setExpires(new \DateTimeImmutable('2001-01-01'));
         }
@@ -186,14 +201,18 @@ final class TidyFeedbackHelper implements EventSubscriberInterface
 
             self::$config = [
                 // https://www.doctrine-project.org/projects/doctrine-dbal/en/4.2/reference/configuration.html#connecting-using-a-url
-                'database_url' => $getEnv('TIDY_FEEDBACK_DATABASE_URL'),
-                'debug' => (bool) $getEnv('TIDY_FEEDBACK_DEBUG'),
-                'default_locale' => $getEnv('TIDY_FEEDBACK_DEFAULT_LOCALE') ?? 'da',
+                self::CONFIG_DATABASE_URL => $getEnv('TIDY_FEEDBACK_DATABASE_URL'),
+                self::CONFIG_DEBUG => 'true' === $getEnv('TIDY_FEEDBACK_DEBUG'),
+                self::CONFIG_DEFAULT_LOCALE => $getEnv('TIDY_FEEDBACK_DEFAULT_LOCALE') ?? 'da',
+                self::CONFIG_DEV_MODE => 'true' === $getEnv('TIDY_FEEDBACK_DEV_MODE'),
+                self::CONFIG_DISABLE => 'true' === $getEnv('TIDY_FEEDBACK_DISABLE'),
+                self::CONFIG_DISABLE_PATTERN => $getEnv('TIDY_FEEDBACK_DISABLE_PATTERN') ?? '@^/tidy-feedback$@',
+                self::CONFIG_USERS => [],
             ];
 
             if ($users = $getEnv('TIDY_FEEDBACK_USERS')) {
                 try {
-                    $config['users'] = json_decode($users, true, flags: JSON_THROW_ON_ERROR);
+                    $config[self::CONFIG_USERS] = json_decode($users, true, flags: JSON_THROW_ON_ERROR);
                 } catch (\Throwable) {
                 }
             }
@@ -214,6 +233,18 @@ final class TidyFeedbackHelper implements EventSubscriberInterface
      */
     public function onKernelResponse(ResponseEvent $event): void
     {
+        if (self::getConfig(self::CONFIG_DISABLE)) {
+            return;
+        }
+
+        if ($pattern = self::getConfig(self::CONFIG_DISABLE_PATTERN)) {
+            $request = $event->getRequest();
+            $uri = $request->getPathInfo();
+            if (@preg_match($pattern, $uri)) {
+                return;
+            }
+        }
+
         $response = $event->getResponse();
         if (false
           || !$response->isSuccessful()
@@ -234,7 +265,7 @@ final class TidyFeedbackHelper implements EventSubscriberInterface
                 $response->setContent($content);
             }
         } catch (\Throwable $throwable) {
-            if (self::getConfig('debug')) {
+            if (self::getConfig(self::CONFIG_DEBUG)) {
                 throw $throwable;
             }
             // Ignore all errors!
@@ -243,7 +274,7 @@ final class TidyFeedbackHelper implements EventSubscriberInterface
 
     public function authorize(Request $request): void
     {
-        $users = self::getConfig('users');
+        $users = self::getConfig(self::CONFIG_USERS);
         if (empty($users)) {
             return;
         }

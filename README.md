@@ -9,7 +9,7 @@ bundle](https://symfony.com/doc/current/bundles.html) to collection user feedbac
 ## Installation
 
 ``` shell
-composer require itk-dev/tidy-feedback:dev-main
+composer require itk-dev/tidy-feedback
 ```
 
 > [!IMPORTANT]
@@ -19,7 +19,6 @@ composer require itk-dev/tidy-feedback:dev-main
 
 ``` shell
 drush pm:install tidy_feedback
-drush tidy-feedback:doctrine:schema-update
 ```
 
 ### Symfony
@@ -49,10 +48,6 @@ return [
 ];
 ```
 
-``` shell
-bin/console tidy-feedback:doctrine:schema-update
-```
-
 ## Configuration
 
 We need a [Doctrine database
@@ -72,11 +67,45 @@ As an alternative for Drupal you can set `TIDY_FEEDBACK_DATABASE_URL` in `settin
 putenv('TIDY_FEEDBACK_DATABASE_URL=pdo-sqlite://localhost//app/tidy-feedback.sqlite');
 ```
 
-`TIDY_FEEDBACK_USERS='{"admin": "password"}'`
+See [All configuration options](#all-configuration-options) for details and more options.
+
+## Create Tidy feedback database
+
+In a Drupal project, run
+
+``` shell
+drush tidy-feedback:doctrine:schema-update
+
+```
+
+In Symfony projects, run
+
+``` shell
+bin/console tidy-feedback:doctrine:schema-update
+```
 
 After installation and configuration, open `/tidy-feedback/test` on your site and enjoy!
 
 All feedback items can be found on `/tidy-feedback`.
+
+## All configuration options
+
+Only `TIDY_FEEDBACK_DATABASE_URL` is required.
+
+| Name                            | Default value        | Example                                            |
+|---------------------------------|----------------------|----------------------------------------------------|
+| `TIDY_FEEDBACK_DATABASE_URL`    |                      | `pdo-sqlite://localhost//app/tidy-feedback.sqlite` |
+| `TIDY_FEEDBACK_DEBUG`           | `false`              |                                                    |
+| `TIDY_FEEDBACK_DEFAULT_LOCALE`  | `da`                 |                                                    |
+| `TIDY_FEEDBACK_DEV_MODE`        | `false`              |                                                    |
+| `TIDY_FEEDBACK_DISABLE`         | `false`              |                                                    |
+| `TIDY_FEEDBACK_DISABLE_PATTERN` | `@^/tidy-feedback$@` | `@^$@` (don't disable on all pages)                |
+| `TIDY_FEEDBACK_USERS`           | `{}`                 | `{"admin": "password"}`                            |
+
+Boolean options must be set to `true`, e.g. `TIDY_FEEDBACK_DISABLE=true`, to be true. Otherwise they're false.
+
+The pattern in `TIDY_FEEDBACK_DISABLE_PATTERN` will be matched against the *path* of the request URL only, i.e. the
+query string will *not* be included.
 
 ## Development
 
