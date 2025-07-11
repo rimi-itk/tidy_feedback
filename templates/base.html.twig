@@ -4,6 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title 'Tidy feedback'|trans %}</title>
+    <link rel="icon" type="image/x-icon" href="{{ path('tidy_feedback_asset', {asset: 'favicon.ico'}) }}">
+    <link rel="icon" type="image/svg+xml" href="{{ path('tidy_feedback_asset', {asset: 'favicon.svg'}) }}">
+    <link rel="icon" type="image/png" href="{{ path('tidy_feedback_asset', {asset: 'favicon-32x32.png'}) }}" sizes="32x32">
+    <link rel="icon" type="image/png" href="{{ path('tidy_feedback_asset', {asset: 'favicon-16x16.png'}) }}" sizes="16x16">
     <link href="{{ path('tidy_feedback_asset', {asset: 'app.css'}) }}" rel="stylesheet">
 </head>
 <body>
@@ -12,6 +16,9 @@
         {% block content %}
         {% endblock %}
     </div>
+{% endblock %}
+{% block javascripts %}
+    <script src="{{ path('tidy_feedback_asset', {asset: 'app.js'}) }}"></script>
 {% endblock %}
 </body>
 </html>

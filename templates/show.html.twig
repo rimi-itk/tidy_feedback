@@ -1,34 +1,62 @@
 {% extends 'base.html.twig' %}
 
 {% block content %}
-    <h1>{{ 'Feedback item'|trans }}</h1>
+    <div class="row">
+        <div class="col-md-12 border-bottom py-3 mb-3">
+            <h1 class="m-0">{{ 'Feedback item'|trans }}</h1>
+        </div>
+        <div class="col-md-6">
+            <dl>
+                <dt>{{ 'Subject'|trans }}</dt>
+                <dd>{{ item.subject }}</dd>
+            </dl>
 
-    <dl>
-        <dt>{{ 'Created at'|trans }}</dt>
-        <dd>{{ item.createdAt|date(constant('\\DateTimeImmutable::ATOM')) }}</dd>
+            {% set tableData = [
+                {
+                    key: 'Subject'|trans,
+                    value: item.subject,
+                },
+                {
+                    key: 'Created at'|trans,
+                    value: item.createdAt|date(constant('\\DateTimeImmutable::ATOM')),
+                },
+                {
+                    key: 'Created by'|trans,
+                    value: item.createdBy|default('–'),
+                },
+                {
+                    key: 'Status'|trans,
+                    value: item.status.value,
+                },
+                {
+                    key: 'Category'|trans,
+                    value: item.category|default('–'),
+                },
+            ] %}
 
-        <dt>{{ 'Created by'|trans }}</dt>
-        <dd>{{ item.createdBy|default('–') }}</dd>
-
-        <dt>{{ 'Subject'|trans }}</dt>
-        <dd>{{ item.subject }}</dd>
-
-        <dt>{{ 'Status'|trans }}</dt>
-        <dd>{{ item.status.value }}</dd>
-
-        <dt>{{ 'Category'|trans }}</dt>
-        <dd>{{ item.category|default('–') }}</dd>
-
-        <dt>{{ 'Data'|trans }}</dt>
-        <dd>
-            <pre><code>{{ item.data|filter((_, key) => key not in ['raw', 'svg'])|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_SLASHES')) }}</code></pre>
-        </dd>
-
-        {% set image_url = path('tidy_feedback_image', {id: item.id}) %}
-        <dt>{{ 'Image' }}</dt>
-        <dd>
-            <img src="{{ image_url }}" alt="{{ image_url }}"/>
-            <a href="{{ image_url }}">{{ 'Show image'|trans }}</a>
-        </dd>
-    </dl>
+            <dl>
+                {% for item in tableData %}
+                    <dt>{{ item.key }}</dt>
+                    <dd>{{ item.value }}</dd>
+                {% endfor %}
+            </dl>
+        </div>
+        <div class="col-md-6">
+            {% set image_url = path('tidy_feedback_image', {id: item.id}) %}
+            <strong>{{ 'Image' }}</strong>
+            <a href="{{ image_url }}"><span class="visually-hidden">{{ 'Show image'|trans }}</span>
+                <img src="{{ image_url }}" alt="{{ image_url }}" class="img-thumbnail"/>
+            </a>
+        </div>
+        <div class="col-md-12">
+            <dl>
+                <dt>{{ 'Data'|trans }}</dt>
+                <dd>
+                    <pre><code class="language-json">
+                        {{ item.data|filter((_, key) => key not in ['raw', 'svg'])|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_SLASHES')) }}
+                    </code></pre>
+                </dd>
+            </dl>
+        </div>
+    </div>
 {% endblock %}
